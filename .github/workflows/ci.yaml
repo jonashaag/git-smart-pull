@@ -1,0 +1,11 @@
+name: CI
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mfinelli/setup-shfmt@v3
+      - run: make && git diff --exit-code
