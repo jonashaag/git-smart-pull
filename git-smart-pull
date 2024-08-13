@@ -27,7 +27,8 @@ if [ $res -eq 0 ]; then
   exit 0
 elif [ $res -ne 128 ]; then
   log "[smart-pull] git pull exited with unexpected status $res"
-  exit 3
+  log "[smart-pull] Re-running it so you can see the output:"
+  git pull --ff-only "$@"
 fi
 
 log "[smart-pull] Fast-forward pull failed."
