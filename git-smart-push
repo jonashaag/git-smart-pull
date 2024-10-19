@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -euo pipefail
+
+function log {
+  echo >&2 "[smart-push]" "$@"
+}
+
+set +e
+if [ "$(tput colors 2>/dev/null)" -ge 8 ]; then
+  function log {
+    printf >&2 "\033[90m"
+    echo   >&2 "[smart-push]" "$@"
+    printf >&2 "\033[0m"
+  }
+fi
+set -e
+
+log "Attempting normal push"
+set +e
+git push
+res=$?
+set -e
+
+if [ $res -eq 0 ]; then
+  log "Normal push succeeded."
+  exit 0
+elif [ $res -ne 1 ]; then
+  log "git push exited with unexpected status $res"
+  exit $res
+fi
+
+log "Normal push failed."
+while true; do
+  read -r -p "Select action: [p] smart-pull, then smart-push / [f] push --force-with-lease / [ff] push --force / [q]uit " res
+  case $res in
+    p)
+      git smart-pull
+      git smart-push
+      break
+      ;;
+    f)
+      exec git push --force-with-lease
+      break
+      ;;
+    ff)
+      exec git push --force
+      break
+      ;;
+    n)
+      exit 1
+      ;;
+    *) ;;
+  esac
+done
+fi
