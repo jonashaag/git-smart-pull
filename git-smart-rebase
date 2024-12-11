@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -euo pipefail
+
+upstream="${1:-main}"
+merge_base="$(git merge-base HEAD "$upstream")"
+if [ "$(git rev-list --count "$merge_base"..)" -gt 1 ]; then
+  echo >&2 "Commits to be rebased:"
+  git log --oneline "$merge_base"..
+  while true; do
+    read -r -p "Do you want to squash the commits before rebasing? [s]quash / [i]nteractive rebase / [n]o " res
+    case $res in
+      s)
+        GIT_SEQUENCE_EDITOR="sed -i '' -e '1!s/^pick /squash /g'" git rebase -i "$merge_base"
+        break
+        ;;
+      i)
+        git rebase -i "$merge_base"
+        break
+        ;;
+      n)
+        break
+        ;;
+      *) ;;
+    esac
+  done
+fi
+exec git rebase "$upstream"
