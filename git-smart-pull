@@ -37,7 +37,7 @@ if [ -n "${1:-}" ]; then
   args+=("$1")
 fi
 
-log "Attempting fast-forward pull"
+log "Attempting fast-forward pull."
 set +e
 git pull --ff-only ${args[@]+"${args[@]}"} 2>/dev/null
 res=$?
