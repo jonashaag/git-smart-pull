@@ -31,15 +31,15 @@ if [ -n "${2:-}" ]; then
   exit 1
 fi
 
+args=()
 if [ -n "${1:-}" ]; then
-  args="origin $1"
-else
-  args=""
+  args+=("origin")
+  args+=("$1")
 fi
 
 log "Attempting fast-forward pull"
 set +e
-git pull --ff-only $args 2>/dev/null
+git pull --ff-only ${args[@]+"${args[@]}"} 2>/dev/null
 res=$?
 set -e
 
@@ -49,7 +49,7 @@ if [ $res -eq 0 ]; then
 elif [ $res -ne 128 ]; then
   err "git pull exited with unexpected status $res"
   err "Re-running it so you can see the output:"
-  git pull --ff-only $args
+  git pull --ff-only ${args[@]+"${args[@]}"}
 fi
 
 log "Fast-forward pull failed."
@@ -63,7 +63,7 @@ git branch -D _git-smart-pull --quiet 2>/dev/null || true
 git checkout -b _git-smart-pull --quiet
 git branch --set-upstream-to "$upstream_branch" --quiet
 set +e
-git pull --rebase=true $args >/dev/null 2>/dev/null
+git pull --rebase=true ${args[@]+"${args[@]}"} >/dev/null 2>/dev/null
 rebase_ok=$?
 set -e
 if [ $rebase_ok -eq 0 ]; then
@@ -71,7 +71,7 @@ if [ $rebase_ok -eq 0 ]; then
   log "Will pull with rebase."
   git checkout -
   git branch -D _git-smart-pull --quiet 2>/dev/null || true
-  git pull --rebase=true $args
+  git pull --rebase=true ${args[@]+"${args[@]}"}
 else
   log "Cannot rebase without conflict. Conflicted files:"
   ( 
@@ -87,16 +87,16 @@ else
     read -r -p "Select pull method: [m]erge / [r]ebase / [q]uit " res
     case $res in
       m)
-        exec git pull --rebase=no $args
+        exec git pull --rebase=no ${args[@]+"${args[@]}"}
         break
         ;;
       r)
         git fetch -a
         if [ -n "${1:-}" ]; then
           rebase_branch="origin/$1"
-        else
+      else
           rebase_branch="$upstream_branch"
-        fi
+      fi
         exec git smart-rebase "$rebase_branch"
         break
         ;;
